@@ -1,0 +1,231 @@
+{
+  "Description" : "This template will create a Global Dynamo Db Table with TTL attribute.",
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Parameters" : {
+    "DDBTableName" : {
+     "Description" : " Name of the DynamoDb Table.",
+     "Type" : "String"
+    },
+    "ReadCapacityUnits" : {
+      "Description" : "Number of strong consistent reads per second for items upto 4KB in size.",
+      "Type" : "Number"
+    },
+    "WriteCapacityUnits" : {
+      "Description" : "Number of writes per second for items upto 1KB in size. ",
+      "Type" : "Number"
+    },
+    "ASMaxCapacity" : {
+      "Description" : "Desired Max capacity for Autoscaling up DynamoDb nodes. ",
+      "Type" : "Number"
+    },
+    "ASMinCapacity" : {
+      "Description" : "Desired Min capacity for Autoscaling down DynamoDb nodes. ",
+      "Type" : "Number"
+    },
+    "TargetValue" : {
+      "Description" : "The Target Value in percentage when the autoscaling will be triggered.",
+      "Type" : "Number"
+    },
+    "ScaleInCooldown" : {
+      "Description" : "The amount of time, in seconds, after a scale in activity completes before another scale in activity can start. ",
+      "Type" : "Number"
+    },
+    "ScaleOutCooldown" : {
+      "Description" : "The amount of time, in seconds, after a scale out activity completes before another scale out activity can start. ",
+      "Type" : "Number"
+    },
+    "WritePredefinedMetricType" : {
+      "Description" : "The metric type to be used to evaluate the WriteScaling.",
+      "Type" : "String"
+    },
+    "ReadPredefinedMetricType" : {
+      "Description" : "The metric type to be used to evaluate the ReadScaling.",
+      "Type" : "String"
+    },
+    "IAMRole" : {
+      "Description" : "The IAM Role for creating dynamo db table.",
+      "Type" : "String"
+    },
+    "AlarmTopic" : {
+      "Description" : "The SNS Alaram Topic Url where the alerts would be sent.",
+      "Type" : "String"
+    },
+    "WriteCapcityThreshold" : {
+      "Description" : "The write threshold at which the writecapacity alarm will be triggered.",
+      "Type" : "String"
+    },
+    "ReadCapcityThreshold" : {
+      "Description" : "The read threshold at which the read capacity alarm will be triggered.",
+      "Type" : "String"
+    }
+  },
+  "Resources" : {
+    "MyCacheTable" : {
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "TableName" : {"Ref" : "DDBTableName" },
+
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "key",
+            "AttributeType" : "S"
+          }
+        ],
+
+        "KeySchema": [
+          {
+            "AttributeName": "key",
+            "KeyType": "HASH"
+          }
+        ],
+
+        
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : { "Ref" :"ReadCapacityUnits" },
+          "WriteCapacityUnits" : { "Ref" :"WriteCapacityUnits" }
+        },
+
+        "StreamSpecification" : {
+          "StreamViewType" : "NEW_AND_OLD_IMAGES"
+        },
+
+        "TimeToLiveSpecification" : {
+          "AttributeName" : "expiration_time",
+          "Enabled" : "true"
+        }
+      }
+    },
+    "ReadCapacityScalableTarget": {
+      "DependsOn" : "MyCacheTable",
+      "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+      "Properties": {
+        "MaxCapacity": { "Ref": "ASMaxCapacity" },
+        "MinCapacity": { "Ref": "ASMinCapacity" },
+        "ResourceId": { "Fn::Join": [
+          "/",
+          [
+            "table",
+            { "Ref": "DDBTableName" }
+          ]
+        ] },
+        "RoleARN": {
+           "Ref" : "IAMRole"
+        },
+        "ScalableDimension": "dynamodb:table:ReadCapacityUnits",
+        "ServiceNamespace": "dynamodb"
+      }
+    },
+    "WriteCapacityScalableTarget": {
+      "DependsOn" : "MyCacheTable",
+      "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+      "Properties": {
+        "MaxCapacity": { "Ref": "ASMaxCapacity" },
+        "MinCapacity": { "Ref": "ASMinCapacity" },
+        "ResourceId": { "Fn::Join": [
+          "/",
+          [
+            "table",
+            { "Ref": "DDBTableName" }
+          ]
+        ] },
+        "RoleARN": {
+           "Ref" : "IAMRole"
+        },
+        "ScalableDimension": "dynamodb:table:WriteCapacityUnits",
+        "ServiceNamespace": "dynamodb"
+      }
+    },
+    "ReadScalingPolicy": {
+      "DependsOn" : "ReadCapacityScalableTarget",
+      "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+      "Properties": {
+        "PolicyName": "ReadAutoScalingPolicy",
+        "PolicyType": "TargetTrackingScaling",
+        "ScalingTargetId": {
+          "Ref": "ReadCapacityScalableTarget"
+        },
+        "TargetTrackingScalingPolicyConfiguration": {
+          "TargetValue": {"Ref" :"TargetValue"},
+          "ScaleInCooldown": {"Ref" :"ScaleInCooldown"},
+          "ScaleOutCooldown": {"Ref" :"ScaleOutCooldown"},
+          "PredefinedMetricSpecification": {
+            "PredefinedMetricType": {"Ref" :"ReadPredefinedMetricType"}
+          }
+        }
+      }
+    },
+    "WriteScalingPolicy": {
+      "DependsOn" : "WriteCapacityScalableTarget",
+      "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+      "Properties": {
+        "PolicyName": "WriteAutoScalingPolicy",
+        "PolicyType": "TargetTrackingScaling",
+        "ScalingTargetId": {
+          "Ref": "WriteCapacityScalableTarget"
+        },
+        "TargetTrackingScalingPolicyConfiguration": {
+          "TargetValue": {"Ref" :"TargetValue"},
+          "ScaleInCooldown": {"Ref" :"ScaleInCooldown"},
+          "ScaleOutCooldown": {"Ref" :"ScaleOutCooldown"},
+          "PredefinedMetricSpecification": {
+            "PredefinedMetricType": {"Ref" :"WritePredefinedMetricType"}
+          }
+        }
+      }
+    },
+  "ConsumedReadCapacityAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alarm and Scale-up when read capactity reached 80% of the provisioned write capacity. ",
+        "MetricName": "ConsumedReadCapacityUnits",
+        "Namespace": "AWS/DynamoDB",
+        "Statistic": "Sum",
+        "Period": "60",
+        "EvaluationPeriods": "1",
+        "Threshold": {"Ref":"ReadCapcityThreshold"},
+        "AlarmActions": [ { "Ref": "ReadScalingPolicy" },
+          {"Ref": "AlarmTopic"} ],
+        "Dimensions": [
+          {
+            "Name": "TableName",
+            "Value": { "Ref": "DDBTableName" }
+          }
+        ],
+        "ComparisonOperator": "GreaterThanThreshold"
+      }
+    },
+  "ConsumedWriteCapacityAlarm": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "AlarmDescription": "Alarm and Scale-up when write capactity reached 80% of the provisioned write capacity. ",
+        "MetricName": "ConsumedWriteCapacityUnits",
+        "Namespace": "AWS/DynamoDB",
+        "Statistic": "Sum",
+        "Period": "60",
+        "EvaluationPeriods": "1",
+        "Threshold": {"Ref":"WriteCapcityThreshold"},
+        "AlarmActions": [ { "Ref": "WriteScalingPolicy" },
+          {"Ref": "AlarmTopic"} ],
+        "Dimensions": [
+          {
+            "Name": "TableName",
+            "Value": { "Ref": "DDBTableName" }
+          }
+        ],
+        "ComparisonOperator": "GreaterThanThreshold"
+      }
+    }
+  },
+  "Outputs":{
+    "DynamoDbARN": {
+      "Value": {
+        "Fn::GetAtt" : [ "MyCacheTable" , "Arn" ]
+      }
+    },
+    "DynamoDbStreamARN": {
+      "Value": {
+        "Fn::GetAtt" : [ "MyCacheTable" , "StreamArn" ]
+      }
+    }
+  }
+}
