@@ -1,0 +1,228 @@
+{
+  "Description": "CloudFormation Template Using to create RDS Database Instance",
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "RdsInstanceType": {
+      "Type": "String"
+    },
+    "dbidentifier": {
+      "Type": "String"
+    },
+    "dbname": {
+      "Default": "$database_name",
+      "Description" : "Database name",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "64",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+    "dbuser": {
+      "Default": "$user_name",
+      "NoEcho": "true",
+      "Description" : "database admin account username",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "16",
+      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+    },
+    "dbpassword": {
+      "Default": "$db_password",
+      "NoEcho": "true",
+      "Description" : "database admin account password",
+      "Type": "String",
+      "MinLength": "8",
+      "MaxLength": "41",
+      "AllowedPattern" : "[a-zA-Z0-9]*",
+      "ConstraintDescription" : "must contain only alphanumeric characters."
+    },
+    "kmskey": {"Type": "String"},
+    "Region" :{
+      "Description" : "Intials for the region the resources will be created in.",
+      "Type" : "String",
+      "Default" :""
+    },
+    "Env":{
+      "Description" : "Name of the Environment.",
+      "Type" : "String",
+      "Default" :""
+    },
+    "VpcId": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "The VPC ID holding Subnets specified above.",
+      "Default": "vpc-XXXXXXX"
+    },
+    "MultiAZ": {
+      "Description": "Whether to enable MultiAZ - True or False",
+      "Type": "String",
+      "Default": "False"
+    },
+    "ThreadConcurrency":{
+      "Description" : "Value for number of concurrent threads.",
+      "Type" : "String"
+    },
+    "LogQueriesNotUsingIndexes":{
+      "Description" : "Value should be either 0 or 1",
+      "Type" : "String"
+    },
+    "LogSlowAdminStatements":{
+      "Description" : "Value should be either 0 or 1",
+      "Type" : "String"
+    },
+    "LogSlowSlaveStatements":{
+      "Description" : "Value should be either 0 or 1",
+      "Type" : "String"
+    },
+    "SlowQueryLog":{
+      "Description" : "Value should be either 0 or 1",
+      "Type" : "String"
+    },
+    "SkipNameResolve":{
+      "Description" : "Value should be either 0 or 1",
+      "Type" : "String"
+    },
+    "LongQueryTime":{
+      "Description" : "Time for which long queries can run.",
+      "Type" : "String"
+    }
+  },
+  "Resources": {
+    "RDSInstance": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "AllocatedStorage": "200",
+        "AllowMajorVersionUpgrade": "false",
+        "AutoMinorVersionUpgrade": "true",
+        "MultiAZ": {
+          "Ref": "MultiAZ"
+        },
+        "DBInstanceClass": {
+          "Ref": "RdsInstanceType"
+        },
+        "Port": "3306",
+        "StorageType": "io1",
+        "BackupRetentionPeriod": "1",
+        "MasterUsername": { "Ref" : "dbuser" } ,
+        "MasterUserPassword": { "Ref" : "dbpassword" },
+        "PreferredBackupWindow": "11:51-12:21",
+        "PreferredMaintenanceWindow": "thu:10:22-thu:10:52",
+        "DBInstanceIdentifier": { "Ref" : "dbidentifier" },
+        "Iops": "2000",
+        "KmsKeyId": {"Ref": "kmskey"},
+        "StorageEncrypted": "true",
+        "DBName": {
+          "Ref": "dbname"
+        },
+        "Engine": "mysql",
+        "EngineVersion": "5.6.34",
+        "LicenseModel": "general-public-license",
+        "DBParameterGroupName" : {"Ref": "DBParameterGroup"},
+        "DBSubnetGroupName": {
+          "Ref": "DBSubnetGroup"
+        },
+        "VPCSecurityGroups": [
+          {"Fn::ImportValue" : {
+            "Fn::Join": [
+              "",
+              [
+                "db-rds-",
+                {
+                  "Ref": "Env"
+                }
+              ]
+            ]
+          }}
+        ]
+      },
+      "DeletionPolicy": "Delete",
+      "Metadata": {
+        "AWS::CloudFormation::Designer": {
+          "id": "07177c01-e87d-49e8-94e8-c3d9ec6e543c"
+        }
+      }
+    },
+    "DBSubnetGroup" : {
+      "Type" : "AWS::RDS::DBSubnetGroup",
+      "Properties" : {
+        "DBSubnetGroupDescription" : "DBSubnetGroup for the rds instance",
+        "SubnetIds" : {
+          "Fn::Split" : [ ",", {
+            "Fn::ImportValue" : {"Fn::Sub" : "${VpcId}:data-subnet:ids"}
+          } ] }
+      }
+    },
+    "DBParameterGroup": {
+      "Type": "AWS::RDS::DBParameterGroup",
+      "Properties": {
+        "Description": "DB parameter group for RDS DB Instance",
+        "Family": "mysql5.6",
+        "Parameters": {
+          "lower_case_table_names": "1",
+          "innodb_thread_concurrency" : { "Ref" : "ThreadConcurrency" },
+          "log_queries_not_using_indexes" : { "Ref" : "LogQueriesNotUsingIndexes"},
+          "log_slow_admin_statements" : { "Ref" : "LogSlowAdminStatements"},
+          "log_slow_slave_statements" : { "Ref" : "LogSlowSlaveStatements"},
+          "slow_query_log" : { "Ref" : "SlowQueryLog"},
+          "skip_name_resolve" : { "Ref" : "SkipNameResolve"},
+          "long_query_time" : { "Ref" : "LongQueryTime" },
+          "tx_isolation": "READ-COMMITTED"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "RDSInstanceDnsName": {
+      "Value": {
+        "Fn::GetAtt": [
+          "RDSInstance",
+          "Endpoint.Address"
+        ]
+      }
+    },
+    "RDSDatabaseName": {
+      "Value": {
+        "Ref": "dbname"
+      }
+    },
+    "DBParameterGroupName": {
+      "Description": "DB Parameter Group Name",
+      "Value": { "Ref": "DBParameterGroup" }
+    },
+    "DBSubnetGroup": {
+    "Description": "DB Subnet Group Name",
+    "Value": { "Ref": "DBParameterGroup"}
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Designer": {
+      "07177c01-e87d-49e8-94e8-c3d9ec6e543c": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 60,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": []
+      },
+      "5c1da390-09b6-4571-9c1c-34d66ba7941b": {
+        "size": {
+          "width": 60,
+          "height": 60
+        },
+        "position": {
+          "x": 180,
+          "y": 90
+        },
+        "z": 1,
+        "embeds": [],
+        "dependson": [
+          "07177c01-e87d-49e8-94e8-c3d9ec6e543c"
+        ]
+      }
+    }
+  }
+}
