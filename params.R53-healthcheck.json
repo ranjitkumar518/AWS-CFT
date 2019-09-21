@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "Env",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "ComponentName",
+    "ParameterValue": "$component_name"
+  },
+  {
+    "ParameterKey": "ELBUrl",
+    "ParameterValue": "$ELB_ENDPOINT"
+  },
+  {
+    "ParameterKey": "Region",
+    "ParameterValue": "$region"
+  },
+  {
+    "ParameterKey": "ResourcePath",
+    "ParameterValue": "$health_full"
+  }
+]
