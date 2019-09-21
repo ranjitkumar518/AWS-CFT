@@ -1,0 +1,120 @@
+{
+  "Description": "CloudFormation Template to create 3 Read Replicas from a source RDS instance in same region",
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "RdsInstanceType": {
+      "Type": "String"
+    },
+    "MasterDBIdentifier": {
+      "Type": "String"
+    },
+    "KMSKey": {"Type": "String"},
+    "Env":{
+      "Description" : "Name of the Environment.",
+      "Type" : "String",
+      "Default" :""
+    },
+    "VpcId": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "The VPC ID holding Subnets specified above.",
+      "Default": "vpc-XXXXXXX"
+    }
+  },
+  "Resources": {
+    "ReplicaDB1": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "SourceDBInstanceIdentifier": { "Ref": "MasterDBIdentifier" },
+        "DBInstanceClass": { "Ref": "RdsInstanceType" },
+        "DBInstanceIdentifier":
+        {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "MasterDBIdentifier"
+              },
+              "-replica2a"
+            ]
+          ]
+        },
+        "AvailabilityZone": "us-west-2a",
+        "Iops": "2000",
+        "StorageType": "io1",
+        "AllocatedStorage": "200"
+      }
+    },
+    "ReplicaDB2": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "SourceDBInstanceIdentifier": { "Ref": "MasterDBIdentifier" },
+        "DBInstanceClass": { "Ref": "RdsInstanceType" },
+        "DBInstanceIdentifier":
+        {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "MasterDBIdentifier"
+              },
+              "-replica2b"
+            ]
+          ]
+        },
+        "AvailabilityZone": "us-west-2b",
+        "Iops": "2000",
+        "StorageType": "io1",
+        "AllocatedStorage": "200"
+      }
+    },
+    "ReplicaDB3": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "SourceDBInstanceIdentifier": { "Ref": "MasterDBIdentifier" },
+        "DBInstanceClass": { "Ref": "RdsInstanceType" },
+        "DBInstanceIdentifier":
+        {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "MasterDBIdentifier"
+              },
+              "-replica2c"
+            ]
+          ]
+        },
+        "AvailabilityZone": "us-west-2c",
+        "Iops": "2000",
+        "StorageType": "io1",
+        "AllocatedStorage": "200"
+      }
+    }
+  },
+  "Outputs": {
+    "ReplicaDB1Endpoint": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ReplicaDB1",
+          "Endpoint.Address"
+        ]
+      }
+    },
+    "ReplicaDB2Endpoint": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ReplicaDB2",
+          "Endpoint.Address"
+        ]
+      }
+    },
+    "ReplicaDB3Endpoint": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ReplicaDB3",
+          "Endpoint.Address"
+        ]
+      }
+    }
+  }
+}
