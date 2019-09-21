@@ -1,0 +1,35 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to create Security Groups for ELBs
+Parameters:
+  Env:
+    Description: Name of the Environment.
+    Type: String
+  VpcId:
+    Description: The VPC ID holding Subnets specified above.
+    Type: AWS::EC2::VPC::Id
+  vpcCidr:
+    Description: The VPC CIDR Block the ELB  will connect.
+    Type: String
+    Default: 0.0.0.0/0
+Resources:
+  ElbSGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join ["",["$service_name-elb-",!Ref Env]]
+      GroupDescription: EC2 Instance access
+      Tags:
+      - Key: Name
+        Value: !Join ["",["$service_name-elb-",!Ref Env]]
+      VpcId: !Ref VpcId
+      SecurityGroupEgress:
+      - ToPort: 443
+        FromPort: 443
+        IpProtocol: tcp
+        CidrIp: !Ref vpcCidr
+Outputs:
+  ElbSecurityGroup:
+    Value: !Ref ElbSGroup
+    Export:
+      Name: !Join ["",["$service_name-elb-",!Ref Env]]
+
