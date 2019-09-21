@@ -1,0 +1,48 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to create cross region Security Groups for RDS
+Parameters:
+  SourceVpcId:
+    Description: The VPC ID holding Subnets specified above.
+    Type: AWS::EC2::VPC::Id
+  ComponentName:
+    Description: Component name of application.
+    Type: String
+  DestinationVpcCidr1:
+    Description: CIDR range of destination subnet 1.
+    Type: String
+  DestinationVpcCidr2:
+    Description: CIDR range of destination subnet 2.
+    Type: String
+  DestinationVpcCidr3:
+    Description: CIDR range of destination subnet 3.
+    Type: String
+Resources:
+  SGroup1:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join ["",[!Ref ComponentName,"-cross-region-rds"]]
+      GroupDescription: EC2 Instance access
+      Tags:
+      - Key: Name
+        Value: !Join ["",[!Ref ComponentName,"-cross-region-rds"]]
+      VpcId: !Ref SourceVpcId
+      SecurityGroupIngress:
+      - ToPort: 3306
+        FromPort: 3306
+        IpProtocol: tcp
+        CidrIp: !Ref DestinationVpcCidr1
+      - ToPort: 3306
+        FromPort: 3306
+        IpProtocol: tcp
+        CidrIp: !Ref DestinationVpcCidr2
+      - ToPort: 3306
+        FromPort: 3306
+        IpProtocol: tcp
+        CidrIp: !Ref DestinationVpcCidr3
+
+Outputs:
+  Ec2SecurityGroup:
+    Value: !Ref SGroup1
+    Export:
+      Name: !Join ["",[!Ref ComponentName,"-cross-region-rds"]]
