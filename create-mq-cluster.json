@@ -1,0 +1,73 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to create Amazon MQ cluster
+Parameters:
+  Env:
+    Description: Name of the Environment.
+    Type: String
+  Cluster:
+    Description: Sequence number of the MQ Cluster.
+    Type: String
+  DeploymentMode:
+    Description: The deployment mode of the broker.
+    Type: String
+    Default: SINGLE_INSTANCE
+  BrokerInstanceType:
+    Description: The broker's instance type.
+    Type: String
+  VpcId:
+    Description: The VPC ID to be deployed into.
+    Type: AWS::EC2::VPC::Id
+  PrimaryAZ:
+    Description: The Availability Zone number for primary.
+    Type: String
+  SecondaryAZ:
+    Description: The Availability Zone number for secondary.
+    Type: String
+    Default: ""
+  BrokerPassword:
+    Description: The password used to access activemq.
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    MaxLength: 40
+    AllowedPattern: "[a-zA-Z0-9]*"
+    ConstraintDescription: "It must contain only alphanumeric characters."
+Conditions:
+  IsMultiAZ: !Equals [ !Ref DeploymentMode, "ACTIVE_STANDBY_MULTI_AZ" ]
+Resources:
+  MQCluster:
+    Type: "AWS::AmazonMQ::Broker"
+    Properties:
+      AutoMinorVersionUpgrade: false
+      BrokerName: !Join ["",[!Ref Env,"cluster-mq-",!Ref Cluster]]
+      Users:
+        -
+          ConsoleAccess: true
+          Password:
+            Ref: "BrokerPassword"
+          Username: "activemqadmin"
+      DeploymentMode: !Ref DeploymentMode
+      EngineType: "ACTIVEMQ"
+      EngineVersion: "5.15.6"
+      HostInstanceType: !Ref BrokerInstanceType
+      Logs:
+        Audit: true
+        General: true
+      MaintenanceWindowStartTime:
+        DayOfWeek: "MONDAY"
+        TimeOfDay: "15:00"
+        TimeZone: "UTC"
+      PubliclyAccessible: false
+      SecurityGroups:
+        - Fn::ImportValue: !Join ["",["cluster-mq-",!Ref Env]]
+      SubnetIds:
+        !If
+          - IsMultiAZ
+          -
+            - Fn::ImportValue: !Join ["",[!Ref VpcId,":data-subnet-",!Ref PrimaryAZ,":id"]]
+            - Fn::ImportValue: !Join ["",[!Ref VpcId,":data-subnet-",!Ref SecondaryAZ,":id"]]
+          - - Fn::ImportValue: !Join ["",[!Ref VpcId,":data-subnet-",!Ref PrimaryAZ,":id"]]
+Outputs:
+  MQCluster:
+    Value: !Ref MQCluster
