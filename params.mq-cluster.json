@@ -1,0 +1,34 @@
+[
+  {
+    "ParameterKey": "Env",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "Cluster",
+    "ParameterValue": "cluster-1"
+  },
+  {
+    "ParameterKey": "BrokerInstanceType",
+    "ParameterValue": "mq.m5.4xlarge"
+  },
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "vpc-XXXXXX"
+  },
+  {
+    "ParameterKey": "DeploymentMode",
+    "ParameterValue": "ACTIVE_STANDBY_MULTI_AZ"
+  },
+  {
+    "ParameterKey": "PrimaryAZ",
+    "ParameterValue": "az1"
+  },
+  {
+    "ParameterKey": "SecondaryAZ",
+    "ParameterValue": "az2"
+  },
+  {
+    "ParameterKey": "BrokerPassword",
+    "ParameterValue": ""
+  }
+]
