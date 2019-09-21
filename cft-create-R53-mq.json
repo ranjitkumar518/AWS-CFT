@@ -1,0 +1,37 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to create Route 53 records for Amazon MQ
+Parameters:
+  Env:
+    Description: Name of the Environment.
+    Type: String
+  MQCluster1:
+    Description: Endpoint of AmazonMQ Cluster1.
+    Type: String
+  MQCluster2:
+    Description: Endpoint of AmazonMQ Cluster2.
+    Type: String
+Resources:
+  MQDNS:
+    Type: "AWS::Route53::RecordSetGroup"
+    Properties:
+      HostedZoneName: "$Hostedzone."
+      Comment: Weighted R53 for AmazonMQ clusters
+      RecordSets:
+      - Name: !Join ["",[!Ref Env,"-amq.$Hostedzone."]]
+        Type: CNAME
+        TTL: '600'
+        SetIdentifier: "Cluster1"
+        Weight: '50'
+        ResourceRecords:
+        - !Ref MQCluster1
+      - Name: !Join ["",[!Ref Env,"-amq.$Hostedzone."]]
+        Type: CNAME
+        TTL: '600'
+        SetIdentifier: "Cluster2"
+        Weight: '50'
+        ResourceRecords:
+        - !Ref MQCluster2
+Outputs:
+  MQDNS:
+    Value: !Ref MQDNS
