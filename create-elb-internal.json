@@ -1,0 +1,85 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "This template builds an ELB and maps it to respective security groups.",
+  "Parameters": {
+    "VpcId": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "The VPC ID holding Subnets specified above.",
+      "Default": "vpc-xxxxxxx"
+    },
+    "Service" :{
+      "Description" : "Name of the Service.",
+      "Type" : "String",
+      "Default" :"Hello world"
+    },
+    "Env":{
+      "Description" : "Name of the Environment.",
+      "Type" : "String",
+      "Default" :""
+    },
+    "ElbNameSuffix":{
+      "Description" : "Suffix attached to ELB name.",
+      "Type" : "String",
+      "Default" :""
+    },
+    "HealthCheck":{
+      "Description" : "HealthCheck Url",
+      "Type" : "String",
+      "Default" :""
+    }
+  },
+  "Resources": {
+    "InternalELB": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "Scheme": "internal",
+        "LoadBalancerName": {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "Service"
+              },
+              "-",
+              {
+                "Ref": "Env"
+              },
+              {
+                "Ref": "ElbNameSuffix"
+              }
+            ]
+          ]
+        },
+        "SecurityGroups": [
+          { "Fn::ImportValue" : {"Fn::Join": ["", [ "$service_name-elb-", { "Ref": "Env" } ]]} }
+        ],
+        "Subnets": {
+          "Fn::Split" : [ ",", {"Fn::ImportValue" : {"Fn::Sub" : "${VpcId}:private-subnet:ids"}} ]
+        },
+        "CrossZone": "true",
+        "Listeners": [
+          {
+            "Protocol": "TCP",
+            "InstancePort": 443,
+            "InstanceProtocol": "TCP",
+            "LoadBalancerPort": 443
+          }
+        ],
+        "HealthCheck": {
+          "Target": {
+            "Ref": "HealthCheck"
+          },
+          "Timeout": "5",
+          "Interval": "10",
+          "HealthyThreshold": "2",
+          "UnhealthyThreshold": "2"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ElbName": {
+      "Value": { "Ref": "InternalELB" }
+    }
+  }
+}
