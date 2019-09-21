@@ -1,0 +1,229 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "AWS CloudTrail API Activity Alarm Template for CloudWatch Logs",
+  "Parameters" : {
+      "LogGroupName" : {
+          "Type" : "String",
+          "Default" : "CloudTrail/DefaultLogGroup",
+          "Description" : "Enter CloudWatch Logs log group name. Default is CloudTrail/DefaultLogGroup"
+      },
+      "AlarmTopic":{
+          "Description" : "AlarmTopic SNS topic",
+          "Type" : "String",
+          "Default" :"arn:aws:sns:us-west-2:$ACCOUNT_ID:Tech-EmailAlerts"
+      }
+  },
+  "Resources" : {
+      "SecurityGroupChangesMetricFilter": {
+          "Type": "AWS::Logs::MetricFilter",
+          "Properties": {
+              "LogGroupName": { "Ref" : "LogGroupName" },
+              "FilterPattern": "{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) || ($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) || ($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup) }",
+              "MetricTransformations": [
+                  {
+                      "MetricNamespace": "CloudTrailMetrics",
+                      "MetricName": "SecurityGroupEventCount",
+                      "MetricValue": "1"
+                  }
+              ]
+          }
+      },
+      "SecurityGroupChangesAlarm": {
+          "Type": "AWS::CloudWatch::Alarm",
+          "Properties": {
+              "AlarmName" : "CloudTrailSecurityGroupChanges",
+              "AlarmDescription" : "Alarms when an API call is made to create, update or delete a Security Group.",
+              "AlarmActions" : [{ "Ref" : "AlarmTopic" }],
+              "MetricName" : "SecurityGroupEventCount",
+              "Namespace" : "CloudTrailMetrics",
+              "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+              "EvaluationPeriods" : "1",
+              "Period" : "300",
+              "Statistic" : "Sum",
+              "Threshold" : "1"
+          }
+      },
+
+      "NetworkAclChangesMetricFilter": {
+          "Type": "AWS::Logs::MetricFilter",
+          "Properties": {
+              "LogGroupName": { "Ref" : "LogGroupName" },
+              "FilterPattern": "{ ($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) || ($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) || ($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation) }",
+              "MetricTransformations": [
+                  {
+                      "MetricNamespace": "CloudTrailMetrics",
+                      "MetricName": "NetworkAclEventCount",
+                      "MetricValue": "1"
+                  }
+              ]
+          }
+      },
+      "NetworkAclChangesAlarm": {
+          "Type": "AWS::CloudWatch::Alarm",
+          "Properties": {
+              "AlarmName" : "CloudTrailNetworkAclChanges",
+              "AlarmDescription" : "Alarms when an API call is made to create, update or delete a Network ACL.",
+              "AlarmActions" : [{ "Ref" : "AlarmTopic" }],
+              "MetricName" : "NetworkAclEventCount",
+              "Namespace" : "CloudTrailMetrics",
+              "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+              "EvaluationPeriods" : "1",
+              "Period" : "300",
+              "Statistic" : "Sum",
+              "Threshold" : "1"
+          }
+      },
+
+      "GatewayChangesMetricFilter": {
+          "Type": "AWS::Logs::MetricFilter",
+          "Properties": {
+              "LogGroupName": { "Ref" : "LogGroupName" },
+              "FilterPattern": "{ ($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) || ($.eventName = AttachInternetGateway) || ($.eventName = CreateInternetGateway) || ($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway) }",
+              "MetricTransformations": [
+                  {
+                      "MetricNamespace": "CloudTrailMetrics",
+                      "MetricName": "GatewayEventCount",
+                      "MetricValue": "1"
+                  }
+              ]
+          }
+      },
+      "GatewayChangesAlarm": {
+          "Type": "AWS::CloudWatch::Alarm",
+          "Properties": {
+              "AlarmName" : "CloudTrailGatewayChanges",
+              "AlarmDescription" : "Alarms when an API call is made to create, update or delete a Customer or Internet Gateway.",
+              "AlarmActions" : [{ "Ref" : "AlarmTopic" }],
+              "MetricName" : "GatewayEventCount",
+              "Namespace" : "CloudTrailMetrics",
+              "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+              "EvaluationPeriods" : "1",
+              "Period" : "300",
+              "Statistic" : "Sum",
+              "Threshold" : "1"
+          }
+      },
+
+      "VpcChangesMetricFilter": {
+          "Type": "AWS::Logs::MetricFilter",
+          "Properties": {
+              "LogGroupName": { "Ref" : "LogGroupName" },
+              "FilterPattern": "{ ($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) || ($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) || ($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) || ($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) || ($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink) }",
+              "MetricTransformations": [
+                  {
+                      "MetricNamespace": "CloudTrailMetrics",
+                      "MetricName": "VpcEventCount",
+                      "MetricValue": "1"
+                  }
+              ]
+          }
+      },
+      "VpcChangesAlarm": {
+          "Type": "AWS::CloudWatch::Alarm",
+          "Properties": {
+              "AlarmName" : "CloudTrailVpcChanges",
+              "AlarmDescription" : "Alarms when an API call is made to create, update or delete a VPC, VPC peering connection or VPC connection to classic.",
+              "AlarmActions" : [{ "Ref" : "AlarmTopic" }],
+              "MetricName" : "VpcEventCount",
+              "Namespace" : "CloudTrailMetrics",
+              "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+              "EvaluationPeriods" : "1",
+              "Period" : "300",
+              "Statistic" : "Sum",
+              "Threshold" : "1"
+          }
+      },
+
+
+
+      "CloudTrailChangesMetricFilter": {
+          "Type": "AWS::Logs::MetricFilter",
+          "Properties": {
+              "LogGroupName": { "Ref" : "LogGroupName" },
+              "FilterPattern": "{ ($.eventName = CreateTrail) || ($.eventName = UpdateTrail) || ($.eventName = DeleteTrail) || ($.eventName = StartLogging) || ($.eventName = StopLogging) }",
+              "MetricTransformations": [
+                  {
+                      "MetricNamespace": "CloudTrailMetrics",
+                      "MetricName": "CloudTrailEventCount",
+                      "MetricValue": "1"
+                  }
+              ]
+          }
+      },
+      "CloudTrailChangesAlarm": {
+          "Type": "AWS::CloudWatch::Alarm",
+          "Properties": {
+              "AlarmName" : "CloudTrailChanges",
+              "AlarmDescription" : "Alarms when an API call is made to create, update or delete a CloudTrail trail, or to start or stop logging to a trail.",
+              "AlarmActions" : [{ "Ref" : "AlarmTopic" }],
+              "MetricName" : "CloudTrailEventCount",
+              "Namespace" : "CloudTrailMetrics",
+              "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+              "EvaluationPeriods" : "1",
+              "Period" : "300",
+              "Statistic" : "Sum",
+              "Threshold" : "1"
+          }
+      },
+
+
+      "IAMPolicyChangesMetricFilter": {
+          "Type": "AWS::Logs::MetricFilter",
+          "Properties": {
+              "LogGroupName": { "Ref" : "LogGroupName" },
+              "FilterPattern": "{($.eventName=DeleteGroupPolicy)||($.eventName=DeleteRolePolicy)||($.eventName=DeleteUserPolicy)||($.eventName=PutGroupPolicy)||($.eventName=PutRolePolicy)||($.eventName=PutUserPolicy)||($.eventName=CreatePolicy)||($.eventName=DeletePolicy)||($.eventName=CreatePolicyVersion)||($.eventName=DeletePolicyVersion)||($.eventName=AttachRolePolicy)||($.eventName=DetachRolePolicy)||($.eventName=AttachUserPolicy)||($.eventName=DetachUserPolicy)||($.eventName=AttachGroupPolicy)||($.eventName=DetachGroupPolicy)}",
+              "MetricTransformations": [
+                  {
+                      "MetricNamespace": "CloudTrailMetrics",
+                      "MetricName": "IAMPolicyEventCount",
+                      "MetricValue": "1"
+                  }
+              ]
+          }
+      },
+      "IAMPolicyChangesAlarm": {
+          "Type": "AWS::CloudWatch::Alarm",
+          "Properties": {
+              "AlarmName" : "CloudTrailIAMPolicyChanges",
+              "AlarmDescription" : "Alarms when an API call is made to change an IAM policy.",
+              "AlarmActions" : [{ "Ref" : "AlarmTopic" }],
+              "MetricName" : "IAMPolicyEventCount",
+              "Namespace" : "CloudTrailMetrics",
+              "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+              "EvaluationPeriods" : "1",
+              "Period" : "300",
+              "Statistic" : "Sum",
+              "Threshold" : "1"
+          }
+      },
+      "S3BucketChangesMetricFilter": {
+          "Type": "AWS::Logs::MetricFilter",
+          "Properties": {
+              "LogGroupName": { "Ref" : "LogGroupName" },
+              "FilterPattern": "{($.eventName=PutBucketAcl)||($.eventName=DeleteBucketPolicy)||($.eventName=PutBucketPolicy)||($.eventName=DeleteBucketLifecycle)||($.eventName=PutBucketLifecycle)||($.eventName=DeleteBucketReplication)||($.eventName=PutBucketReplication)||($.eventName=DeleteBucketCors)||($.eventName=PutBucketCors)}",
+              "MetricTransformations": [
+                  {
+                      "MetricNamespace": "CloudTrailMetrics",
+                      "MetricName": "S3BucketEventCount",
+                      "MetricValue": "1"
+                  }
+              ]
+          }
+      },
+      "S3BucketChangesAlarm": {
+          "Type": "AWS::CloudWatch::Alarm",
+          "Properties": {
+              "AlarmName" : "CloudTrailIAMPolicyChanges",
+              "AlarmDescription" : "Alarms when an API call is made to change S3 Buckets.",
+              "AlarmActions" : [{ "Ref" : "AlarmTopic" }],
+              "MetricName" : "S3BucketEventCount",
+              "Namespace" : "CloudTrailMetrics",
+              "ComparisonOperator" : "GreaterThanOrEqualToThreshold",
+              "EvaluationPeriods" : "1",
+              "Period" : "300",
+              "Statistic" : "Sum",
+              "Threshold" : "1"
+          }
+      }
+  }
+}
