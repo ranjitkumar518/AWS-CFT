@@ -1,0 +1,35 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to create Security Groups for RDS and add EC2 SG to RDS SG
+Parameters:
+  VpcId:
+    Description: The VPC ID holding Subnets specified above.
+    Type: AWS::EC2::VPC::Id
+  Env:
+    Description: Name of the Environment.
+    Type: String
+  ComponentName:
+    Description: Component name of Application.
+    Type: String
+Resources:
+  SGroup1:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join ["",[!Ref ComponentName,"-rds-",!Ref Env]]
+      GroupDescription: EC2 Instance access
+      Tags:
+      - Key: Name
+        Value: !Join ["",[!Ref ComponentName,"-rds-",!Ref Env]]
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+      - ToPort: 3306
+        FromPort: 3306
+        IpProtocol: tcp
+        SourceSecurityGroupId:
+           Fn::ImportValue: !Join ["",[!Ref ComponentName,"-ec2-",!Ref Env]]
+
+Outputs:
+  Ec2SecurityGroup:
+    Value: !Ref SGroup1
+    Export:
+      Name: !Join ["",[!Ref ComponentName,"-rds-",!Ref Env]]
