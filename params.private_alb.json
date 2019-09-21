@@ -1,0 +1,34 @@
+[
+  {
+    "ParameterKey": "Env",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "CertificateARN",
+    "ParameterValue": "arn:aws:acm:us-west-2:account_id:certificate/xxxxxxxxxxxxxxxxxxx"
+  },
+  {
+    "ParameterKey": "Service",
+    "ParameterValue": "$internal-service-name"
+  },
+  {
+    "ParameterKey": "ABCDExportSGid",
+    "ParameterValue": "sg-XXXXXXX"
+  },
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "vpc-XXXXXXX"
+  },
+  {
+    "ParameterKey": "Scheme",
+    "ParameterValue": "internal"
+  },
+  {
+    "ParameterKey": "HealthCheckPath",
+    "ParameterValue": "service_healthcheck"
+  },
+  {
+    "ParameterKey": "GreenEndPoint",
+    "ParameterValue": "$service_name_$env-green.$private_hosted_zone_name"
+  }
+]
