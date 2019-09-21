@@ -1,0 +1,82 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "This template builds a External ELB and maps it to respective security groups.",
+  "Parameters": {
+    "VpcId": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "The VPC ID holding Subnets specified above.",
+      "Default": "vpc-XXXXXX"
+    },
+    "APIExportSGid" :{
+      "Description" : "Name of the exported security group",
+      "Type" : "String",
+      "Default" :"sg-usw2-gateway-preprod"
+    },
+    "Service" :{
+      "Description" : "Name of the Service.",
+      "Type" : "String",
+      "Default" :""
+    },
+    "Env":{
+      "Description" : "Name of the Environment.",
+      "Type" : "String",
+      "Default" :""
+    },
+    "ElbNameSuffix":{
+      "Description" : "Suffix attached to ELB name.",
+      "Type" : "String",
+      "Default" :""
+    },
+    "HealthCheck":{
+      "Description" : "URL for HealthCheck",
+      "Type" : "String",
+      "Default" :""
+    }
+  },
+  "Resources": {
+    "ELBNAME": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "LoadBalancerName" : {"Fn::Join": ["", [ {"Ref": "Service"}, "-", {"Ref" : "Env"}, {"Ref": "ElbNameSuffix"} ]]},
+        "SecurityGroups": [
+          { "Fn::ImportValue" : {"Ref" : "APIExportSGid"}},
+          { "Fn::ImportValue" : {
+            "Fn::Join": [
+              "",
+              [
+                "$service_name-elb-",
+                {
+                  "Ref": "Env"
+                }
+              ]
+            ]}
+          }
+        ],
+        "Subnets": {
+            "Fn::Split" : [ ",", {"Fn::ImportValue" : {"Fn::Sub" : "${VpcId}:ingress-subnet:ids"}} ]
+        },
+        "CrossZone": "true",
+        "Listeners": [
+          {
+            "Protocol": "TCP",
+            "InstancePort": 443,
+            "InstanceProtocol": "TCP",
+            "LoadBalancerPort": 443
+          }
+        ],
+        "HealthCheck": {
+          "Target": { "Ref" : "HealthCheck" },
+          "Timeout": "5",
+          "Interval": "10",
+          "HealthyThreshold": "2",
+          "UnhealthyThreshold": "2"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "ELB_NAME": {
+      "Value": { "Ref": "ELBNAME" } }
+
+  }
+}
