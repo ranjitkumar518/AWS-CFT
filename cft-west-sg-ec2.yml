@@ -1,0 +1,51 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to create Security Groups for EC2s and associate bastion and ELB security group
+Parameters:
+  VpcId:
+    Description: The VPC ID holding Subnets specified above.
+    Type: AWS::EC2::VPC::Id
+  Env:
+    Description: Name of the Environment.
+    Type: String
+  ComponentName:
+    Description: Component name.
+    Type: String
+  bastionSGId:
+    Description: The Name of the bastain SG where the EC2 will connect.
+    Type: String
+    Default: sg-XXXXXXXXX 
+  toPort:
+      Description: Destination port.
+      Type: String
+      Default: 443
+  fromPort:
+      Description: Source port.
+      Type: String
+      Default: 443
+Resources:
+  SGroup1:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Join ["",[!Ref ComponentName,"-ec2-",!Ref Env]]
+      GroupDescription: EC2 Instance access
+      Tags:
+      - Key: Name
+        Value: !Join ["",[!Ref ComponentName,"-ec2-",!Ref Env]]
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+      - ToPort: !Ref toPort
+        FromPort: !Ref fromPort
+        IpProtocol: tcp
+        SourceSecurityGroupId:
+           Fn::ImportValue: !Join ["",[!Ref ComponentName,"-elb-",!Ref Env]]
+      - ToPort: 22
+        FromPort: 22
+        IpProtocol: tcp
+        SourceSecurityGroupId: !Ref bastionSGId
+Outputs:
+  Ec2SecurityGroup:
+    Value: !Ref SGroup1
+    Export:
+      Name: !Join ["",[!Ref ComponentName,"-ec2-",!Ref Env]]
+
