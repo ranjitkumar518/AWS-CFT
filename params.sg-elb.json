@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "vpc-XXXXXXXX"
+  },
+  {
+    "ParameterKey": "vpcCidr",
+    "ParameterValue": "*.*.*.*/XX"
+  },
+  {
+    "ParameterKey": "Env",
+    "ParameterValue": "dev"
+  }
+]
