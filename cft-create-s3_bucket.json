@@ -1,0 +1,79 @@
+{
+  "Description" : "This template will create a S3 bucket and bucket policy for config service.",
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Parameters" :{
+  	"VersioningStatus" :{
+  		"Description" : "This property is used to enable/disable bucket object versionining.",
+  		"Type" : "String"
+  	},
+  	"AWSAccountNumber" :{
+  		"Description" : "The AWS account number where the bucket will be created.",
+  		"Type" : "Number"
+  	},
+  	"AppPrefix" :{
+  		"Description" : "The name of the application for which the bucket will be created.",
+  		"Type" : "String"
+  	},
+  	"Env" :{
+  		"Description" : "The Environment for which the bucket will be created.",
+  		"Type" : "String"
+  	},
+  	"Service" :{
+  		"Description" : "The Service for which the bucket will be created.",
+  		"Type" : "String"
+  	}
+  },
+  "Resources":{
+  	"ConfigServiceBucket" : {
+  		"Type" : "AWS::S3::Bucket",
+  		"Properties" : {
+  			"BucketName" : {"Fn::Join": ["",[{"Ref" : "AppPrefix"},"-",{"Ref" : "Env"},"-", {"Ref": "Service"},"-config-",{"Ref": "AWS::Region"}]]},
+  			"VersioningConfiguration" : {
+  				"Status" : {"Ref" : "VersioningStatus"}
+  			}
+  		}
+  	},
+  	"ConfigServiceBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+      	"Bucket" : {"Ref" : "ConfigServiceBucket" },
+      	"PolicyDocument": {
+      		"Version": "2012-10-17",
+    		"Id": "Policy232232232",
+      		"Statement": [
+        	{
+            	"Sid": "AddPerm",
+            	"Effect": "Allow",
+            	"Principal": {
+            		"AWS": {"Fn::Join": ["",["arn:aws:iam::",{"Ref" : "AWSAccountNumber"},":root"]]}
+            		},
+            	"Action": "s3:GetObject",
+            	"Resource" : {"Fn::Join": ["",["arn:aws:s3:::",{"Ref" : "AppPrefix"},"-",{"Ref" : "Env"},"-", {"Ref": "Service"},"-config-",{"Ref": "AWS::Region"},"/*"]]}
+        	},
+        	{
+            	"Sid": "DenyUnEncryptedObjectUploads",
+            	"Effect": "Deny",
+            	"Principal": {
+                	"AWS": {"Fn::Join": ["",["arn:aws:iam::",{"Ref" : "AWSAccountNumber"},":root"]]}
+            	},
+            	"Action": "s3:PutObject",
+            	"Resource" : {"Fn::Join": ["",["arn:aws:s3:::",{"Ref" : "AppPrefix"},"-",{"Ref" : "Env"},"-", {"Ref": "Service"},"-config-",{"Ref": "AWS::Region"},"/*"]]},
+            	"Condition": {
+                	"StringNotEquals": {
+                    	"s3:x-amz-server-side-encryption": "AES256"
+                	}
+            	}
+        	}]
+    	}
+      }
+    }	
+  },
+  "Outputs" :{
+  	"ConfigServiceS3BucketARN": {
+      "Value": {
+        "Fn::GetAtt" : [ "ConfigServiceBucket" , "Arn" ]
+      }
+    }
+  }
+}
+	
