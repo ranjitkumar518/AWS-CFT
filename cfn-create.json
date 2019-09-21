@@ -1,0 +1,34 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "cloudformation:*",
+        "ec2:*",
+        "elasticloadbalancing:*",
+        "iam:ListInstanceProfiles",
+        "iam:CreateInstanceProfile",
+        "iam:AddRoleToInstanceProfile",
+        "iam:DeleteInstanceProfile",
+        "iam:DeleteRole",
+        "iam:DeleteRolePolicy",
+        "iam:PassRole",
+        "iam:PutRolePolicy",
+        "iam:GetInstanceProfile",
+        "iam:GetRole",
+        "iam:RemoveRoleFromInstanceProfile",
+        "autoscaling:*",
+        "iam:CreateRole",
+        "s3:*",
+        "route53:*",
+        "cloudwatch:*",
+        "autoscaling:CreateOrUpdateTags",
+        "autoscaling:DescribeAutoScalingInstances",
+        "autoscaling:DescribeTags",
+        "autoscaling:UpdateAutoScalingGroup"
+      ],
+      "Resource": "*",
+      "Effect": "Allow"
+    }
+  ]
+}
