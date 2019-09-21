@@ -1,0 +1,21 @@
+[{
+    "ParameterKey":"VersioningStatus",
+    "ParameterValue" : "Enabled" 
+  },
+  {
+    "ParameterKey":"AWSAccountNumber",
+    "ParameterValue" : "XXXXXXXXXXXX"
+  },
+  {
+    "ParameterKey":"AppPrefix",
+    "ParameterValue" : "$bussiness_name" 
+  },
+  {
+    "ParameterKey":"Env",
+    "ParameterValue" : "dev" 
+  },
+  {
+    "ParameterKey":"Service",
+    "ParameterValue" : "$service_name"
+  }
+  ]
