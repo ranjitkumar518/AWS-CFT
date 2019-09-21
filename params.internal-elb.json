@@ -1,0 +1,26 @@
+[
+  {
+    "ParameterKey": "Env",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "DnsPrefix",
+    "ParameterValue": "$service_name-prf1"
+  },
+  {
+    "ParameterKey": "ElbNameSuffix",
+    "ParameterValue": "-green"
+  },
+  {
+    "ParameterKey": "Service",
+    "ParameterValue": "$service_name"
+  },
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "$vpc_id"
+  },
+  {
+    "ParameterKey": "HealthCheck",
+    "ParameterValue": "HTTPS:443/$service_elb_healthcheck"
+  }
+]
