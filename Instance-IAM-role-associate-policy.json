@@ -1,0 +1,46 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "This template creates an Iam role for AWS account and associates policys that are already created.",
+  "Resources": {
+    "InstanceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [ "ec2.amazonaws.com" ]
+            },
+            "Action": [ "sts:AssumeRole" ]
+          } ]
+        },
+        "RoleName": "iam-estore-prd-InstanceRole",
+        "Path": "/",
+        "ManagedPolicyArns": ["arn:aws:iam::$account_id:policy/iam-s3get-policy","arn:aws:iam::$account_id:policy/iam-s3put-policy","arn:aws:iam::$account_id:policy/iam-ses-policy","arn:aws:iam::aws:policy/CloudFrontReadOnlyAccess","arn:aws:iam::$account_id:policy/iam-cfncreate","arn:aws:iam::aws:policy/CloudWatchFullAccess"]
+      }
+    },
+    "InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [
+          {
+            "Ref": "InstanceRole"
+          } ]
+      }
+    }
+  },
+  "Outputs": {
+    "InstanceRoleName": {
+      "Value": { "Fn::GetAtt": [ "InstanceRole", "Arn"] },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-role" }}
+    },
+
+    "InstanceProfileName": {
+      "Value": { "Fn::GetAtt": [ "InstanceProfile", "Arn"] },
+      "Export" : { "Name" : {"Fn::Sub": "${AWS::StackName}-profile" }}
+    }
+  }
+
+}
