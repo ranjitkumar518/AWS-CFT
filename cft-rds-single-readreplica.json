@@ -1,0 +1,147 @@
+{
+  "Description": "CloudFormation Template to create a dummy DB as standby to support Passive EC2 in us-east-2",
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "RdsInstanceType": {
+      "Type": "String"
+    },
+    "MasterDBARN": {
+      "Type": "String"
+    },
+    "MasterDBIdentifier": {
+      "Type": "String"
+    },
+    "DestinationKMSKey": {
+      "Type": "String"
+    },
+    "Env":{
+      "Description" : "Name of the Environment.",
+      "Type" : "String",
+      "Default" :""
+    },
+    "VpcId": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "The VPC ID holding Subnets specified above.",
+      "Default": ""
+    },
+    "ThreadConcurrency":{
+      "Description" : "Value for number of concurrent threads.",
+      "Type" : "String"
+    },
+    "InnoDBLockWaitTimeout":{
+      "Description" : "Value for InnoDB Lock Wait Timeout.",
+      "Type" : "String"
+    },
+    "InnoDBPrintAllDeadlocks":{
+      "Description" : "Value representing whether to print all deadlocks.",
+      "Type" : "String"
+    },
+    "LogQueriesNotUsingIndexes":{
+      "Description" : "Value should be either 0 or 1",
+      "Type" : "String"
+    },
+    "LogSlowAdminStatements":{
+      "Description" : "Value should be either 0 or 1",
+      "Type" : "String"
+    },
+    "LogSlowSlaveStatements":{
+      "Description" : "Value should be either 0 or 1",
+      "Type" : "String"
+    },
+    "SlowQueryLog":{
+      "Description" : "Value should be either 0 or 1",
+      "Type" : "String"
+    },
+    "SkipNameResolve":{
+      "Description" : "Value should be either 0 or 1",
+      "Type" : "String"
+    },
+    "LongQueryTime":{
+      "Description" : "Time for which long queries can run.",
+      "Type" : "String"
+    }
+  },
+  "Resources": {
+    "DummyMasterDB": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "SourceDBInstanceIdentifier": { "Ref": "MasterDBARN" },
+        "SourceRegion": "us-west-2",
+        "DBInstanceClass": { "Ref": "RdsInstanceType" },
+        "DBInstanceIdentifier":
+        {
+          "Fn::Join": [
+            "",
+            [
+              {
+                "Ref": "MasterDBIdentifier"
+              },
+              "-dummy"
+            ]
+          ]
+        },
+        "Iops": "2000",
+        "StorageType": "io1",
+        "AllocatedStorage": "200",
+        "KmsKeyId": {"Ref": "DestinationKMSKey"},
+        "BackupRetentionPeriod": "1",
+        "PreferredBackupWindow": "11:51-12:21",
+        "DBParameterGroupName" : {"Ref": "DBParameterGroup"},
+        "DBSubnetGroupName": {"Ref": "DBSubnetGroup"},
+        "VPCSecurityGroups": [
+          {"Fn::ImportValue" : {
+            "Fn::Join": [
+              "",
+              [
+                "ep-rds-",
+                {
+                  "Ref": "Env"
+                }
+              ]
+            ]
+          }}
+        ]
+      }
+    },
+    "DBSubnetGroup" : {
+      "Type" : "AWS::RDS::DBSubnetGroup",
+      "Properties" : {
+        "DBSubnetGroupDescription" : "DBSubnetGroup for the rds instance",
+        "SubnetIds" : {
+          "Fn::Split" : [ ",", {
+            "Fn::ImportValue" : {"Fn::Sub" : "${VpcId}:data-subnet:ids"}
+          } ] }
+      }
+    },
+    "DBParameterGroup": {
+      "Type": "AWS::RDS::DBParameterGroup",
+      "Properties": {
+        "Description": "DB parameter group for RDS DB Instance",
+        "Family": "mysql5.6",
+        "Parameters": {
+          "innodb_lock_wait_timeout": { "Ref" : "InnoDBLockWaitTimeout" },
+          "innodb_print_all_deadlocks": { "Ref" : "InnoDBPrintAllDeadlocks" },
+          "innodb_thread_concurrency" : { "Ref" : "ThreadConcurrency" },
+          "log_queries_not_using_indexes" : { "Ref" : "LogQueriesNotUsingIndexes"},
+          "log_slow_admin_statements" : { "Ref" : "LogSlowAdminStatements"},
+          "log_slow_slave_statements" : { "Ref" : "LogSlowSlaveStatements"},
+          "slow_query_log" : { "Ref" : "SlowQueryLog"},
+          "lower_case_table_names": "1",
+          "skip_name_resolve" : { "Ref" : "SkipNameResolve"},
+          "long_query_time" : { "Ref" : "LongQueryTime" },
+          "tx_isolation": "READ-COMMITTED"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "DummyMasterDBEndpoint": {
+      "Value": {
+        "Fn::GetAtt": [
+          "DummyMasterDB",
+          "Endpoint.Address"
+        ]
+      }
+    }
+  }
+}
