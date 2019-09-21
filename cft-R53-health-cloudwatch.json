@@ -1,0 +1,84 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "This template creates a Route 53 Health Check for ELBs.",
+  "Parameters": {
+    "ComponentName": {
+      "Type": "String",
+      "Description": "Component Name",
+    },
+    "Env": {
+      "Type": "String",
+      "Description": "Environment name",
+    },
+    "ELBUrl" :{
+      "Description" : "ELB URL",
+      "Type" : "String",
+    },
+    "ResourcePath":{
+      "Description" : "Health Check Resource Path",
+      "Type" : "String",
+    },
+    "Region":{
+      "Description" : "Region",
+      "Type" : "String",
+    }
+  },
+  "Resources": {
+    "R53HealthCheck" :{
+      "Type" : "AWS::Route53::HealthCheck",
+      "Properties" : {
+        "HealthCheckConfig" : {
+          "Type" : "CLOUDWATCH_METRIC",
+          "AlarmIdentifier" : {
+            "Name" : {
+              "Fn::Join": [
+                "",
+                [
+                  "elb-",
+                  {
+                    "Ref": "ComponentName"
+                  },
+                  "-",
+                  {
+                    "Ref": "Env"
+                  },
+                  "-HealthyHostCount"
+                ]
+              ]
+            },
+            "Region" : { "Ref": "Region" }
+          }
+        },
+        "HealthCheckTags" : [
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "",
+                [
+                  {
+                    "Ref": "ComponentName"
+                  },
+                  "-",
+                  {
+                    "Ref": "Env"
+                  },
+                  "-",
+                  {
+                    "Ref": "Region"
+                  },
+                  "-elb"
+                ]
+              ]
+            },
+          }
+        ]
+      }
+    }
+  },
+  "Outputs": {
+    "R53HealthCheckID": {
+      "Value": { "Ref": "R53HealthCheck" }
+    }
+  }
+}
