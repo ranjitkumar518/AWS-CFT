@@ -1,0 +1,18 @@
+[
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "vpc-XXXXXXX"
+  },
+  {
+    "ParameterKey": "ComponentName",
+    "ParameterValue": "$ComponentName"
+  },
+  {
+    "ParameterKey": "Env",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "bastionSGId",
+    "ParameterValue": "sg-XXXXXXX"
+  }
+]
