@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "Env",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "Service",
+    "ParameterValue": "$service_name"
+  },
+  {
+    "ParameterKey": "VpcId",
+    "ParameterValue": "vpc-XXXXXXX"
+  },
+  {
+    "ParameterKey": "HealthCheck",
+    "ParameterValue": "HTTPS:443/$service_name_health_full"
+  },
+  {
+    "ParameterKey": "APIExportSGid",
+    "ParameterValue": "vpc-XXXXXXX:intuit-gateway-ingress-tcp-443:id"
+  }
+]
