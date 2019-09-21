@@ -1,0 +1,57 @@
+[{
+    "ParameterKey":"DDBTableName",
+    "ParameterValue" : "dev_dynamodbservice" 
+  },
+  {
+    "ParameterKey":"ReadCapacityUnits",
+    "ParameterValue" : "12"
+  },
+  {
+    "ParameterKey":"WriteCapacityUnits",
+    "ParameterValue" : "12" 
+  },
+  {
+    "ParameterKey":"ASMaxCapacity",
+    "ParameterValue" : "24" 
+  },
+  {
+    "ParameterKey":"ASMinCapacity",
+    "ParameterValue" : "12"
+  },
+  {
+    "ParameterKey":"TargetValue",
+    "ParameterValue" : "80"
+  },
+  {
+    "ParameterKey":"ScaleInCooldown",
+    "ParameterValue" : "60"
+  },
+  {
+    "ParameterKey":"ScaleOutCooldown",
+    "ParameterValue" : "60"
+  },
+  {
+    "ParameterKey":"WritePredefinedMetricType",
+    "ParameterValue" : "DynamoDBWriteCapacityUtilization"
+  },
+  {
+    "ParameterKey":"ReadPredefinedMetricType",
+    "ParameterValue" : "DynamoDBReadCapacityUtilization"
+  },
+  {
+    "ParameterKey":"IAMRole",
+    "ParameterValue" : "arn:aws:iam::XXXXXXXXXXX:role/XXXXXXXXXXXXXXXXXXXXXXXXXX"
+  },
+  {
+    "ParameterKey": "AlarmTopic",
+    "ParameterValue": "arn:aws:sns:us-east-2:XXXXXXXXXXX:Tech-emailAlerts"
+  },
+  {
+    "ParameterKey": "WriteCapcityThreshold",
+    "ParameterValue": "576"
+  },
+  {
+    "ParameterKey": "ReadCapcityThreshold",
+    "ParameterValue": "576"
+  }
+]
