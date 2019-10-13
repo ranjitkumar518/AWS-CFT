@@ -8,5 +8,7 @@ Cloud formation and Automation to setup below AWS services.
 5. RDS instance
 6. RDS read replica's
 7. IAM profiles/ roles
+8. External ELB
+9. Internal ELB
 
 
