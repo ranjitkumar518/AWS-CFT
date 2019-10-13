@@ -6,10 +6,12 @@ Cloud formation and Automation to setup below AWS services.
 3. ALB Internal Load balancer
 4. MQ cluster
 5. RDS instance
-6. RDS read replica's
-7. RDS SG
-8. IAM profiles/ roles
-9. External ELB
-10. Internal ELB
-11. 
+6. RDS region read replica's
+7. RDS global read replica
+8. RDS SG
+9. IAM profiles/ roles
+10. External ELB
+11. Internal ELB
+12. Crete a S3 bucket
+13. create a dynamo policy, etc...
 
