@@ -7,5 +7,6 @@ Cloud formation and Automation to setup below AWS services.
 4. MQ cluster
 5. RDS instance
 6. RDS read replica's
+7. IAM profiles/ roles
 
 
