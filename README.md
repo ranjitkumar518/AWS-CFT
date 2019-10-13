@@ -7,8 +7,9 @@ Cloud formation and Automation to setup below AWS services.
 4. MQ cluster
 5. RDS instance
 6. RDS read replica's
-7. IAM profiles/ roles
-8. External ELB
-9. Internal ELB
-
+7. RDS SG
+8. IAM profiles/ roles
+9. External ELB
+10. Internal ELB
+11. 
 
