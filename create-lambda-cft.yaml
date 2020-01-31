@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: creates lambda function and assign a iam policy
+
+Resources:
+  MyLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: LambdaFunctionName
+      Timeout: 300
+      Handler: mylambda/simple.handler
+      Runtime: python3.6
+      CodeUri: ./                     # Look for lambda code in the same directory # To assign a Role: !GetAtt BasicAWSLambdaRole.Arn
+      Policies: AWSLambdaFullAccess
