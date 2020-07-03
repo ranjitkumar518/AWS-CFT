@@ -17,6 +17,6 @@
   },
   {
     "ParameterKey": "APIExportSGid",
-    "ParameterValue": "vpc-XXXXXXX:intuit-gateway-ingress-tcp-443:id"
+    "ParameterValue": "vpc-XXXXXXX:company-gateway-ingress-tcp-443:id"
   }
 ]
