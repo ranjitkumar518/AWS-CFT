@@ -279,8 +279,8 @@
     "myRDSJdbcConnectStr": "jdbc:mysql://RDS_Endpoint:3306/RDS_DB",
     "myRDSRedshiftSecurityGrps": "RDS_SG",
     "*myRDSPassword": "RDS_PASS",
-		"myRedshiftSchema": "Redshift_Schema",
-    "myRedshiftTableName": "TORDER",
+    "myRedshiftSchema": "Redshift_Schema",
+    "myRedshiftTableName": "table1",
     "myRDSTableName": "table1"
   }
 }
