@@ -1,0 +1,286 @@
+{
+  "objects": [
+    {
+      "directoryPath": "#{myS3StagingLoc}/#{format(@scheduledStartTime, 'YYYY-MM-dd-HH-mm-ss')}",
+      "name": "S3StagingDataNode",
+      "id": "S3StagingDataNode",
+      "type": "S3DataNode"
+    },
+    {
+      "subnetId": "SubnetId",
+      "securityGroupIds": "RDS_SG",
+      "name": "Ec2Instance",
+      "id": "Ec2Instance",
+      "type": "Ec2Resource",
+      "terminateAfter": "2 Hours"
+    },
+    {
+      "role": "DataPipelineDefaultRole",
+      "subject": "PROD DataPipeline : #{myRedshiftTableName} Sync Failure",
+      "name": "SNS: RDS To S3 Copy Activity",
+      "id": "ActionId_MKrxT",
+      "message": "Reporting Sync Job: RDS To S3 Copy Process Failure: #{myRedshiftTableName}",
+      "type": "SnsAlarm",
+      "topicArn": "TopicArn"
+    },
+    {
+      "database": {
+        "ref": "RedshiftCluster"
+      },
+      "name": "DestRedshiftTable",
+      "id": "DestRedshiftTable",
+      "type": "RedshiftDataNode",
+		"schemaName": "#{myRedshiftSchema}",
+      "tableName": "#{myRedshiftTableName}"
+    },
+    {
+      "output": {
+        "ref": "DestRedshiftTable"
+      },
+      "input": {
+        "ref": "SrcRDSTable"
+      },
+      "dependsOn": {
+        "ref": "RDSToS3CopyActivity"
+      },
+      "scriptUri": "s3://s3bucket/scripts/dbconv.sh",
+      "name": "RedshiftTableCreateActivity",
+      "runsOn": {
+        "ref": "Ec2Instance"
+      },
+      "scriptArgument": [
+        "--rds_jdbc=#{myRDSJdbcConnectStr}",
+        "--rds_tbl=#{myRDSTableName}",
+        "--rds_pwd=#{*myRDSPassword}",
+        "--rds_usr=#{myRDSUsername}",
+        "--red_jdbc=#{myRedshiftJdbcConnectStr}",
+        "--red_usr=#{myRedshiftUsername}",
+        "--red_pwd=#{*myRedshiftPassword}",
+        "--red_tbl=#{myRedshiftTableName}",
+        "--red_dist=#{myRedshiftDistributionKey}",
+        "--red_sort=#{myRedshiftSortKeys}",
+        "--red_map=#{myRedshiftTypeConvOverrideMap}",
+        "--red_ins=#{myInsertMode}"
+      ],
+      "id": "RedshiftTableCreateActivity",
+      "type": "ShellCommandActivity"
+    },
+    {
+      "connectionString": "#{myRDSJdbcConnectStr}",
+      "*password": "#{*myRDSPassword}",
+      "name": "rds_mysql",
+      "jdbcProperties": "allowMultiQueries=true",
+      "id": "rds_mysql",
+      "type": "JdbcDatabase",
+      "jdbcDriverClass": "com.mysql.jdbc.Driver",
+      "username": "#{myRDSUsername}"
+    },
+    {
+      "period": "2 Hours",
+      "name": "Every 2 hours",
+      "id": "DefaultSchedule",
+      "type": "Schedule",
+      "startAt": "FIRST_ACTIVATION_DATE_TIME"
+    },
+    {
+      "database": {
+        "ref": "rds_mysql"
+      },
+      "name": "SrcRDSTable",
+      "id": "SrcRDSTable",
+      "type": "SqlDataNode",
+      "table": "#{myRDSTableName}",
+      "selectQuery": "select concat('E', uidpk), LAST_MODIFIED_DATE, CREATED_DATE, IP_ADDRESS, concat('E', BILLING_ADDRESS_UID), TOTAL, STATUS, ORDER_NUMBER, EXT_ORDER_NUMBER, concat('E', CUSTOMER_UID), LOCALE, CURRENCY, CREATED_BY, ORDER_SOURCE, EXCHANGE_ORDER, CART_ORDER_GUID, STORECODE, TAX_EXEMPTION_ID, CLASS_TYPE, ORDER_BILLING_PERSONA_ID from TORDER where LAST_MODIFIED_DATE > DATE_ADD( NOW(), INTERVAL - 3 HOUR );"
+    },
+    {
+      "input": {
+        "ref": "S3StagingDataNode"
+      },
+      "dependsOn": {
+        "ref": "S3ToRedshiftCopyActivity"
+      },
+      "stage": "false",
+      "name": "S3StagingCleanupActivity",
+      "id": "S3StagingCleanupActivity",
+      "runsOn": {
+        "ref": "Ec2Instance"
+      },
+      "type": "ShellCommandActivity",
+      "command": "(sudo yum -y update aws-cli) && (aws s3 rm #{input.directoryPath} --recursive)"
+    },
+    {
+      "output": {
+        "ref": "S3StagingDataNode"
+      },
+      "input": {
+        "ref": "SrcRDSTable"
+      },
+      "onFail": {
+        "ref": "ActionId_MKrxT"
+      },
+      "name": "RDSToS3CopyActivity",
+      "id": "RDSToS3CopyActivity",
+      "runsOn": {
+        "ref": "Ec2Instance"
+      },
+      "type": "CopyActivity"
+    },
+    {
+      "connectionString": "#{myRedshiftJdbcConnectStr}",
+      "*password": "#{*myRedshiftPassword}",
+      "name": "RedshiftCluster",
+      "id": "RedshiftCluster",
+      "type": "RedshiftDatabase",
+      "username": "#{myRedshiftUsername}"
+    },
+    {
+      "output": {
+        "ref": "DestRedshiftTable"
+      },
+      "input": {
+        "ref": "S3StagingDataNode"
+      },
+      "dependsOn": {
+        "ref": "RedshiftTableCreateActivity"
+      },
+      "onFail": {
+        "ref": "ActionId_boESx"
+      },
+      "name": "S3ToRedshiftCopyActivity",
+      "id": "S3ToRedshiftCopyActivity",
+      "runsOn": {
+        "ref": "Ec2Instance"
+      },
+      "type": "RedshiftCopyActivity",
+      "insertMode": "#{myInsertMode}"
+    },
+    {
+      "failureAndRerunMode": "CASCADE",
+      "schedule": {
+        "ref": "DefaultSchedule"
+      },
+      "resourceRole": "DataPipelineDefaultResourceRole",
+      "role": "DataPipelineDefaultRole",
+      "pipelineLogUri": "s3://S3_LogUri/",
+      "scheduleType": "cron",
+      "name": "Default",
+      "id": "Default"
+    },
+    {
+      "role": "DataPipelineDefaultRole",
+      "subject": "PROD DataPipeline : #{myRedshiftTableName} Sync Failure",
+      "name": "SNS: S3 To RedShift Copy Activity",
+      "id": "ActionId_boESx",
+      "message": "Reporting Sync Job: S3 To Redshift Copy Process Failure: #{myRedshiftTableName}",
+      "type": "SnsAlarm",
+      "topicArn": "TopicArn"
+    }
+  ],
+  "parameters": [
+    {
+      "description": "RDS MySQL password",
+      "id": "*myRDSPassword",
+      "type": "String"
+    },
+    {
+      "description": "RDS MySQL table name",
+      "id": "myRDSTableName",
+      "type": "String"
+    },
+    {
+      "description": "Redshift username",
+      "id": "myRedshiftUsername",
+      "type": "String"
+    },
+    {
+      "watermark": "jdbc:mysql://dbinstance.id.region.rds.amazonaws.com:3306/dbname",
+      "description": "RDS MySQL connection string",
+      "id": "myRDSJdbcConnectStr",
+      "type": "String"
+    },
+    {
+      "helpText": "The S3 folder to store RDS MySQL table data before loading to Redshift. The S3 folder must be in the same region as the Redshift cluster.",
+      "description": "S3 staging folder",
+      "id": "myS3StagingLoc",
+      "type": "AWS::S3::ObjectKey"
+    },
+    {
+      "watermark": "columnName",
+      "helpText": "Distribution key column in the Redshift table. If the distribution key is not specified the primary key is set as a distribution key.",
+      "description": "Redshift table distribution key",
+      "optional": "true",
+      "id": "myRedshiftDistributionKey",
+      "type": "String"
+    },
+    {
+      "helpText": "Override the default mapping of RDS MySQL data types to Redshift data types.",
+      "watermark": "tinyint(1):smallint,char(35):varchar(70),bigint(20) unsigned:bigint",
+      "description": "MySQL to Redshift type conversion overrides",
+      "optional": "true",
+      "id": "myRedshiftTypeConvOverrideMap",
+      "type": "String"
+    },
+    {
+      "helpText": "The name of an existing table or a new table that will be automatically created.",
+      "description": "Redshift table name",
+      "id": "myRedshiftTableName",
+      "type": "String"
+    },
+    {
+      "default": "OVERWRITE_EXISTING",
+      "helpLink": "https://docs.aws.amazon.com/console/datapipeline/redshiftcopyactivity",
+      "helpText": "Determines how to handle pre-existing data in the target table that overlaps with rows in the data to be loaded.",
+      "description": "Redshift table insert mode",
+      "id": "myInsertMode",
+      "type": "String"
+    },
+    {
+      "description": "Redshift password",
+      "id": "*myRedshiftPassword",
+      "type": "String"
+    },
+    {
+      "default": "default",
+      "watermark": "security group name",
+      "helpText": "The names of one or more security groups that collectively provide the EC2 instance connectivity to both the RDS instance and Redshift cluster.",
+      "description": "RDS and Redshift security group(s)",
+      "isArray": "true",
+      "id": "myRDSRedshiftSecurityGrps",
+      "type": "String"
+    },
+    {
+      "description": "RDS MySQL username",
+      "id": "myRDSUsername",
+      "type": "String"
+    },
+    {
+      "watermark": "columnName1,columnName2",
+      "helpText": "Sort key columns in the Redshift table.",
+      "description": "Redshift table sort keys",
+      "optional": "true",
+      "id": "myRedshiftSortKeys",
+      "type": "String"
+    },
+    {
+      "watermark": "jdbc:postgresql://endpoint:port/database?tcpKeepAlive=true",
+      "description": "Redshift JDBC connection string",
+      "id": "myRedshiftJdbcConnectStr",
+      "type": "String"
+    }
+  ],
+  "values": {
+    "myRedshiftTypeConvOverrideMap": "bigint(20):varchar(255)",
+    "myRedshiftUsername": "RedShift_Uname",
+    "myRDSUsername": "RDS_Uname",
+    "myS3StagingLoc": "s3://S3_Staging/",
+    "myRedshiftJdbcConnectStr": "jdbc:redshift://Redshift_Endpoint:3306/RedShift_DB",
+    "*myRedshiftPassword": "RedShift_Pass",
+    "myInsertMode": "OVERWRITE_EXISTING",
+    "myRDSJdbcConnectStr": "jdbc:mysql://RDS_Endpoint:3306/RDS_DB",
+    "myRDSRedshiftSecurityGrps": "RDS_SG",
+    "*myRDSPassword": "RDS_PASS",
+		"myRedshiftSchema": "Redshift_Schema",
+    "myRedshiftTableName": "TORDER",
+    "myRDSTableName": "table1"
+  }
+}
